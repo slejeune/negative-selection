@@ -13,13 +13,13 @@ v = 1
 testfile = f'{filename}.{v}-proc.test'
 outfile = f'{filename}.{v}.out'
 
-n = 10
-r = 3
+n = 7
+r = 4
 
 
 def preprocess(file):
     chunk = n
-    step = 2
+    step = 1
     result = ""
     with open(file) as f:
         for line in f.read().split():
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     # negative selection
     os.system(
-        f'cmd /c "java -jar {jarfile} -self {trainfile} -alphabet {filename}.alpha -n {n} -r {r} -c -l < {testfile} > {outfile}')
+        f'cmd /c "java -jar {jarfile} -self {trainfile} -alphabet file://{filename}.alpha -n {n} -r {r} -c -l < {testfile} > {outfile}')
 
     # post process output
     with open(outfile) as file:
@@ -65,10 +65,10 @@ if __name__ == '__main__':
         pred = []
         for l in lines:
             scores = np.array(l.split(), dtype=np.float)
-            pred.append(np.average(scores))
+            pred.append(np.max(scores))
 
     pred = np.array(pred)
-
+    print(pred)
     with open(f'{filename}.{v}.labels') as file:
         label = np.array(file.read().split(), dtype=np.float)
 
