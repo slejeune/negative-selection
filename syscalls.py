@@ -13,7 +13,7 @@ v = 1
 testfile = f'{filename}.{v}-proc.test'
 outfile = f'{filename}.{v}.out'
 
-n = 7
+n = 12
 r = 4
 
 
@@ -40,6 +40,7 @@ def plot_base():
     plt.plot([0, 1], [0, 1], "k--", label="chance level (AUC = 0.5)")
     plt.axis("square")
     plt.grid(alpha=0.5)
+    plt.title(f'natural selection with n={n}')
     plt.legend(loc='lower right')
     plt.tight_layout()
 
@@ -53,9 +54,9 @@ if __name__ == '__main__':
 
     with open(testfile, 'w') as out:
         out.write(preprocess(f'{filename}.{v}.test'))
-        
+
     ax = plt.gca()
-    for r in range(2, 7):
+    for r in range(3, 9):
         # negative selection
         os.system(
             f'cmd /c "java -jar {jarfile} -self {trainfile} -alphabet file://{filename}.alpha -n {n} -r {r} -c -l < {testfile} > {outfile}')
