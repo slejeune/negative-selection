@@ -3,7 +3,7 @@ from sklearn.metrics import RocCurveDisplay
 import matplotlib.pyplot as plt
 import os
 
-cert_or_unm = 'snd-cert' if True else 'snd-unm'
+cert_or_unm = 'snd-cert' if False else 'snd-unm'
 path = os.path.join('.', 'negative-selection', 'syscalls', cert_or_unm)
 jarfile = os.path.join('.', 'negative-selection', 'negsel2.jar')
 
@@ -35,9 +35,8 @@ def preprocess(file):
     return result[:-1]
 
 
-def plot_roc(label, pred, r):
-    RocCurveDisplay.from_predictions(
-        label, pred, name=f'negative selection (r={r})')
+def plot_base():
+
     plt.plot([0, 1], [0, 1], "k--", label="chance level (AUC = 0.5)")
     plt.axis("square")
     plt.grid(alpha=0.5)
@@ -54,22 +53,27 @@ if __name__ == '__main__':
 
     with open(testfile, 'w') as out:
         out.write(preprocess(f'{filename}.{v}.test'))
+        
+    ax = plt.gca()
+    for r in range(2, 7):
+        # negative selection
+        os.system(
+            f'cmd /c "java -jar {jarfile} -self {trainfile} -alphabet file://{filename}.alpha -n {n} -r {r} -c -l < {testfile} > {outfile}')
 
-    # negative selection
-    os.system(
-        f'cmd /c "java -jar {jarfile} -self {trainfile} -alphabet file://{filename}.alpha -n {n} -r {r} -c -l < {testfile} > {outfile}')
+        # post process output
+        with open(outfile) as file:
+            lines = file.read().split('NaN')
+            pred = []
+            for l in lines:
+                scores = np.array(l.split(), dtype=np.float)
+                pred.append(np.max(scores))
 
-    # post process output
-    with open(outfile) as file:
-        lines = file.read().split('NaN')
-        pred = []
-        for l in lines:
-            scores = np.array(l.split(), dtype=np.float)
-            pred.append(np.max(scores))
+        pred = np.array(pred)
 
-    pred = np.array(pred)
-    print(pred)
-    with open(f'{filename}.{v}.labels') as file:
-        label = np.array(file.read().split(), dtype=np.float)
+        with open(f'{filename}.{v}.labels') as file:
+            label = np.array(file.read().split(), dtype=np.float)
 
-    plot_roc(label, pred, r)
+        RocCurveDisplay.from_predictions(
+            label, pred, name=f'negative selection (r={r})', ax=ax)
+
+    plot_base()
